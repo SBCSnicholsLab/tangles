@@ -127,6 +127,17 @@ n1$pr <- n1$pr[n1$pr[,5] > 1499 & n1$pr[,5] < 14501, ]
 plot.is(n1, nam="My first Tangle Plot", cl = "#0000FF60")
 
 
+# Use colours ####
+# Colours can be used to indicate the mapping qualities of reads.
+# The per-read mapping qualities are in columns 2 and 4 for $pr.
+# Look at a histogram of mean qualities per pair:
+hist(rowMeans(n1$pr[,c(2,4)]))
+# make a vector for colours:
+cols <- rep("#FF000040", nrow(n1$pr))
+cols[rowMeans(n1$pr[,c(2,4)]) > 50] <- "#00FF0040"
+cols[rowMeans(n1$pr[,c(2,4)]) > 100] <- "#0000FF40"
+plot.is(n1, nam = "Coloured by mapping quality", cl = cols)
+
 
 # multiple samples ####
 # this requires you to first extract the read positions from the BAM files
@@ -177,7 +188,7 @@ par(mfrow=c(1,1))
 library(circlize)
 
 # get annotations
-gff <- read.table("../dupl11_cons.fasta_mitos.gff")
+gff <- read.table("mito_anno.gff")
 l <- levels(gff[,3])
 circos.par("track.height" = 0.05, start.degree=90, gap.degree=0)
 circos.initialize(c("a", "a"),c(1, 16008))
@@ -190,7 +201,7 @@ apply(gff[gff[,3] == l[1],4:5], 1, function(x) circos.lines(x, c(0,0), lwd=2, co
 apply(gff[gff[,3] == l[2],4:5], 1, function(x) circos.lines(x, c(0,0), lwd=2, col = "green"))
 apply(gff[gff[,3] == l[3],4:5], 1, function(x) circos.lines(x, c(0,0), lwd=2, col = "blue"))
 
-apply(dat[[1]]$pr, 1, function(x){
+apply(n1$pr, 1, function(x){
   circos.link("a", x[1], "a", x[3], w=0, col="#0000FF60")
 })
 # dev.off() # reset to remove circlize setting
@@ -228,34 +239,3 @@ pair.counts.norm500 <- apply(pair.counts500, 2, function(x) x/sum(x, na.rm = T))
 plot(hclust(dist(t(pair.counts.norm500), method="manhattan")),
      main="Cluster dendrogram based on tangle patterns")
 
-
-
-
-
-# test area ####
-str(pair.bins500)
-str(pair.counts500)
-
-
-rM1 <- sing.pair("/media/hannes/2nd/Euphrasia/rDNA/M1rDNA_names.gz")
-rpodi <- sing.pair("/media/hannes/2nd/Podi_rDNA/novoP/PodiN2_names.gz")
-rSim <- list()
-rSim$pr <- data.frame(pr.f = sample.int(10000,1372, replace = T),
-                      pr.fq = sample.int(10000,1372, replace = T),
-                      pr.r = sample.int(10000,1372, replace = T))
-
-str(rM1)
-str(rpodi)
-str(rSim)
-
-# remove short-insert pairs and artefacts
-rM1$pr <- rM1$pr[rM1$pr[,5] > 1499 & rM1$pr[,5] < 8500, ]
-rpodi$pr <- rpodi$pr[rpodi$pr[,5] > 1499 & rpodi$pr[,5] < 23500, ]
-str(rM1)
-str(rpodi)
-hist(rM1$pr[,5])
-plot.is(rM1, ll=10000, nam="M1 rDNA", cl = "#0000FF20")
-plot.is(rpodi, ll=25000, nam="podi rDNA", cl = "#0000FF60")
-hist(rpodi$si$si, breaks=100)
-
-plot.is(rSim, ll=10000, cl = "#0000FF20")
